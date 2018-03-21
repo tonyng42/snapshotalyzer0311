@@ -15,9 +15,74 @@ def filter_instances(project):
 	
 	return instances
 
-@click.group()
+@click.group() #This is the main group. Volumes and Instances are commands nested inside of it
+def cli():
+	"""Shotty manages snapshots"""
+
+@cli.group('snapshots')
+def snapshots():
+	"""Commands for SnapshotS"""
+@snapshots.command('list') #copied from instances.command('list')
+@click.option("--project", default=None, 
+	help="Only snapshots for instances in project (tag Project:<name>)")
+def list_volumes(project):
+	'this command will lists all the Snapshots idiot'
+	instances = filter_instances(project)
+
+	for i in instances:
+		for v in i.volumes.all():
+			for s in v.snapshots.all():
+				print(", ".join((
+					s.id,
+					v.id,
+					i.id,
+					s.state,
+					s.progress,
+					s.start_time.strftime('%c')
+				)))
+	return
+
+@cli.group('volumes')
+def volumes():
+	"""Commands for volumes"""
+
+@volumes.command('list') #copied from instances.command('list')
+@click.option("--project", default=None, 
+	help="Only volumes for project (tag Project:<name>)")
+def list_volumes(project):
+	'this command will lists all the volumes dumbass'
+	instances = filter_instances(project)
+
+	for i in instances:
+		for v in i.volumes.all():
+			print(", ".join((
+				v.id,
+				i.id,
+				v.state,
+				str(v.size) + "GiB",
+				v.encrypted and "Encrypted" or "Unencrypted"
+			)))
+	return
+
+@cli.group('instances')
 def instances():
 	""" Commands for instances"""
+
+@instances.command('snapshot', 
+	help='Create snapshots of all volumes')
+@click.option("--project", default=None, 
+	help="Only instances for project (tag Project:<name>)")
+def create_snapshots(project):
+	'This function creates snapshots for EC2 instances'
+
+	instances = filter_instances(project)
+
+	for i in instances:
+		i.stop() #this will stop the instance before creating the snapshot
+		for v in i.volumes.all():
+			print("Creating snapshot of {0}".format(v.id))
+			v.create_snapshot(Description='Created by SnapshotAlyzer 30000') #create_snapshot is a fcommand within Boto3
+	return
 
 
 @instances.command('list') #changed @click to @instances + the name 'list'
@@ -75,8 +140,7 @@ def start_instances(project):
 
 
 if __name__ == '__main__': #this IF statement will ensure the code runs only it is used as a script
-	
-	instances() #changed from list_instances()
+	cli() #changed from list_instances(), then from instances()
 
 #with the sys module: print(sys.argv)
 #this will print out just the value ass. to the Key of 'AvailabilityZone'
