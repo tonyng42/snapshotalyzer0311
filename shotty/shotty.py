@@ -15,6 +15,10 @@ def filter_instances(project):
 	
 	return instances
 
+def has_pending_snapshot(volume):
+	snapshots = list(volume.snapshots.all())
+	return snapshots and snapshots[0].state=='pending'
+
 @click.group() #This is the main group. Volumes and Instances are commands nested inside of it
 def cli():
 	"""Shotty manages snapshots"""
@@ -86,7 +90,10 @@ def create_snapshots(project):
 		
 		i.stop() #this will stop the instance before creating the snapshot
 		i.wait_until_stopped()
-		
+		if has_pending_snapshot(v):
+			print("  Skipping {0}, snapshot already in progress").format(v.id)
+			continue
+
 		for v in i.volumes.all():
 			print(" Creating snapshot of {0}".format(v.id))
 			v.create_snapshot(Description='Created by SnapshotAlyzer 30000') #create_snapshot is a fcommand within Boto3
