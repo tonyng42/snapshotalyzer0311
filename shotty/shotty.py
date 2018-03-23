@@ -25,7 +25,7 @@ def snapshots():
 @snapshots.command('list') #copied from instances.command('list')
 @click.option("--project", default=None, 
 	help="Only snapshots for instances in project (tag Project:<name>)")
-def list_volumes(project):
+def list_snapshots(project):
 	'this command will lists all the Snapshots idiot'
 	instances = filter_instances(project)
 
@@ -49,8 +49,8 @@ def volumes():
 @volumes.command('list') #copied from instances.command('list')
 @click.option("--project", default=None, 
 	help="Only volumes for project (tag Project:<name>)")
-def list_snapshots(project):
-	'this command will lists all the snapshots, dumbass'
+def list_volumes(project):
+	'this command will lists all the volumes dumbass'
 	instances = filter_instances(project)
 
 	for i in instances:
