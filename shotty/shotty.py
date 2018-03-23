@@ -1,6 +1,6 @@
 import boto3
 import click
-
+import botocore
 session = boto3.Session(profile_name='shotty')
 ec2 = session.resource('ec2')
 
@@ -90,7 +90,7 @@ def create_snapshots(project):
 		i.start()
 		i.wait_until_running()
 	
-	print('Job\'s Done!')
+	print('Job\'s Done!') #this is only printed after everything is done
 	return
 
 
@@ -125,7 +125,12 @@ def stop_instances(project):
 
 	for i in instances:
 		print('Stopping {0}...'.format(i.id))
-		i.stop()
+		try:
+			i.stop() #this will stop the instance before creating the snapshot. IF it can stop the instance, the code will keep going (i.e will not hit an Exceptions). If there's a botocore.exceptions.ClientError error, it will print the line below.
+		except botocore.exceptions.ClientError as e: # the 'as' just gives a valuable name to the Exception
+			print ('Could not stop {0}. '.format(i.id) + str(e)) #this block of action will occur if the defined exception is raised, and print the valuable 'e'
+			continue #this continue command isn't really needed
+
 
 	return
 
@@ -139,8 +144,13 @@ def start_instances(project):
 
 	for i in instances:
 		print('Starting {0}...'.format(i.id))
-		i.start()
+		try:
+			i.start()
+		except botocore.exceptions.ClientError as e: # the 'as' just gives a valuable name to the Exception
+			print ('Could not start {0}. '.format(i.id) + str(e)) #this block of action will occur if the defined exception is raised, and print the valuable 'e'
+			continue #this continue command isn't really needed
 
+	
 	return
 
 
