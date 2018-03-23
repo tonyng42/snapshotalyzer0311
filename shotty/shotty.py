@@ -25,7 +25,9 @@ def snapshots():
 @snapshots.command('list') #copied from instances.command('list')
 @click.option("--project", default=None, 
 	help="Only snapshots for instances in project (tag Project:<name>)")
-def list_snapshots(project):
+@click.option('--all', 'list_all', default=False, is_flag=True,
+	help="List all snapshots for each volume, not just the recent ones") #with the is_flag set to True, it's only list_all when '--all' is in the command
+def list_snapshots(project, list_all):
 	'this command will lists all the Snapshots idiot'
 	instances = filter_instances(project)
 
@@ -40,6 +42,9 @@ def list_snapshots(project):
 					s.progress,
 					s.start_time.strftime('%c')
 				)))
+
+				if s.state=='completed' and not list_all: break #this is b/c boto3 lists the snapshots in rev chrono order, you are telling the loop to stop once it sees 'completed' for a volume
+
 	return
 
 @cli.group('volumes')
